@@ -7,6 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 # Import our custom modules
 from retriever import get_retriever
 from sql_agent import get_sql_agent
+from synthesizer import generate_hybrid_response
 
 load_dotenv()
 
@@ -18,14 +19,15 @@ def route_query(query: str) -> str:
     
     prompt = PromptTemplate.from_template(
         """You are an intelligent router for a Cricket Analytics system.
-You must route the user's query to either the 'sql' database or the 'vector' database.
+You must route the user's query to either 'sql', 'vector', or 'hybrid'.
 
-Choose 'sql' if the query is about specific statistics, match outcomes, player details, ball-by-ball analysis, or requires counting and aggregations.
-Choose 'vector' if the query asks for summaries, historical overviews, textual reports, or general prose descriptions of matches or tournaments.
+Choose 'sql' if the query is strictly about specific numerical statistics, counting, or aggregations with no need for context.
+Choose 'vector' if the query asks purely for historical overviews, textual reports, or prose summaries.
+Choose 'hybrid' if the query asks for both specific numerical stats AND qualitative analysis or historical context (e.g., "Tell me about X's performance and their strike rate").
 
 User Query: {query}
 
-Respond with only exactly one word: either "sql" or "vector".
+Respond with only exactly one word: "sql", "vector", or "hybrid".
 """
     )
     
@@ -62,6 +64,10 @@ def process_query(query: str) -> str:
         answer = chain.invoke({"context": context, "query": query})
         return answer
         
+    elif route == 'hybrid':
+        # Route to the synthesizer for combined stats and text
+        return generate_hybrid_response(query)
+        
     else:
         return f"Error: Unknown routing destination '{route}'."
 
@@ -71,7 +77,8 @@ if __name__ == "__main__":
     else:
         test_queries = [
             "Who won the T20 World Cup in 2022?",
-            "How many matches are recorded in our database?"
+            "How many matches are recorded in our database?",
+            "Tell me about Virat Kohli's performance in recent tournaments and provide his overall batting strike rate."
         ]
         
         for q in test_queries:
