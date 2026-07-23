@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -15,7 +15,7 @@ def route_query(query: str) -> str:
     """
     Routes a user query to either the 'sql' or 'vector' backend.
     """
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
     
     prompt = PromptTemplate.from_template(
         """You are an intelligent router for a Cricket Analytics system.
@@ -47,7 +47,16 @@ def process_query(query: str) -> str:
         # Hand off to the Text-to-SQL Agent
         agent = get_sql_agent()
         response = agent.invoke({"input": query})
-        return response.get("output", "Could not fetch a response from SQL agent.")
+        output = response.get("output", "Could not fetch a response from SQL agent.")
+        
+        # Handle Google GenAI returning a list of content blocks instead of a raw string
+        if isinstance(output, list):
+            text_parts = [block.get('text', '') for block in output if isinstance(block, dict) and 'text' in block]
+            if text_parts:
+                return " ".join(text_parts)
+            return str(output)
+            
+        return output
         
     elif route == 'vector':
         # Retrieve relevant text chunks
@@ -56,7 +65,7 @@ def process_query(query: str) -> str:
         context = "\n\n".join([d.page_content for d in docs])
         
         # Pass the chunks to a generative LLM for a cohesive answer
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
         rag_prompt = PromptTemplate.from_template(
             "Answer the following question based on the provided context.\n\nContext:\n{context}\n\nQuestion: {query}\n\nAnswer:"
         )
@@ -72,8 +81,8 @@ def process_query(query: str) -> str:
         return f"Error: Unknown routing destination '{route}'."
 
 if __name__ == "__main__":
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("Warning: OPENAI_API_KEY not found in environment variables. Please set it in a .env file.")
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print("Warning: GOOGLE_API_KEY not found in environment variables. Please set it in a .env file.")
     else:
         test_queries = [
             "Who won the T20 World Cup in 2022?",

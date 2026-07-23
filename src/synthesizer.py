@@ -1,7 +1,7 @@
 import os
 import json
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -36,7 +36,7 @@ def generate_hybrid_response(query: str) -> str:
     
     # 4. Synthesize with Generative LLM
     print("4. Generating Final Response...")
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
     
     system_prompt = """You are an expert Cricket Analyst. Your job is to answer the user's question by combining exact statistical metrics with historical textual context.
 

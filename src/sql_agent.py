@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.agent_toolkits import create_sql_agent
 
 load_dotenv()
@@ -16,10 +16,10 @@ def get_sql_agent():
     
     # Initialize the LLM
     # Note: Requires OPENAI_API_KEY in the environment or a .env file
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
     
     # Create the SQL agent
-    agent_executor = create_sql_agent(llm, db=db, agent_type="openai-tools", verbose=True)
+    agent_executor = create_sql_agent(llm, db=db, agent_type="tool-calling", verbose=True)
     return agent_executor
 
 if __name__ == "__main__":

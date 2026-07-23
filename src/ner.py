@@ -2,7 +2,7 @@ import os
 from typing import List
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 
 load_dotenv()
@@ -57,7 +57,7 @@ def classify_entities(entities: CricketEntities) -> dict:
 
 def extract_cricket_entities(text: str) -> dict:
     """Extracts and classifies cricket entities from the given text."""
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite", temperature=0)
     structured_llm = llm.with_structured_output(CricketEntities)
     
     prompt = PromptTemplate.from_template(
